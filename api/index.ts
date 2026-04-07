@@ -66,5 +66,32 @@ app.put('/api/auth/change-password', async (req, res) => {
     return res.status(500).json({ message: 'Şifre güncellenemedi: ' + error.message });
   }
 });
+// 1. Ayarları Getir (GET)
+app.get('/api/site-data', async (req, res) => {
+  try {
+    const docRef = doc(db, 'siteData', 'home');
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      res.json(docSnap.data());
+    } else {
+      res.status(404).json({ message: "Veri bulunamadı" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 2. Ayarları Güncelle (POST)
+app.post('/api/site-data', async (req, res) => {
+  const newData = req.body;
+  try {
+    const docRef = doc(db, 'siteData', 'home');
+    await updateDoc(docRef, newData);
+    res.json({ message: "Site verileri başarıyla güncellendi!" });
+  } catch (error) {
+    // Eğer doküman hiç yoksa hata verebilir, o yüzden catch içinde yönetiyoruz
+    res.status(500).json({ error: error.message });
+  }
+});
 
 export default app;
