@@ -14,25 +14,33 @@ app.post('/api/auth/login', (req, res) => {
     res.status(401).json({ message: 'Hatalı giriş bilgileri' });
   }
 });
-// Şifre değiştirme rotası - Tam eşleşme için:
-app.put('/api/auth/change-password', async (req, res) => {
-  const { newPassword } = req.body;
-
-  if (!newPassword) {
-    return res.status(400).json({ message: 'Yeni şifre gönderilmedi' });
-  }
-
+// Giriş Rotası - Firebase'den şifreyi okur
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  
   try {
+    // 1. Firebase'deki 'settings/admin' dokümanına git
     const adminRef = doc(db, 'settings', 'admin');
-    await updateDoc(adminRef, {
-      password: newPassword
-    });
-    
-    console.log("Şifre Firestore'da güncellendi!");
-    return res.json({ message: 'Şifre başarıyla güncellendi!' });
+    const adminSnap = await getDoc(adminRef);
+
+    if (adminSnap.exists()) {
+      const dbPassword = adminSnap.data().password; // Firebase'deki güncel şifre
+
+      // 2. Senin girdiğin şifre ile Firebase'deki şifreyi karşılaştır
+      if (email === 'admin@example.com' && password === dbPassword) {
+        return res.json({ 
+          token: 'secure-token-123', 
+          user: { email: 'admin@example.com' } 
+        });
+      } else {
+        return res.status(401).json({ message: 'Şifre hatalı!' });
+      }
+    } else {
+      return res.status(404).json({ message: 'Admin verisi bulunamadı!' });
+    }
   } catch (error) {
-    console.error("Firestore Güncelleme Hatası:", error);
-    return res.status(500).json({ message: 'Veritabanına yazılamadı!', error: error.message });
+    console.error("Firebase hata:", error);
+    return res.status(500).json({ message: 'Sunucu hatası', error: error.message });
   }
 });
 export default app;
