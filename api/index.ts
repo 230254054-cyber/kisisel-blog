@@ -19,44 +19,33 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- SITE DATA KAYDETME (Unexpected Token Çözümü) ---
-app.post(['/api/site-data', '/api/profile'], async (req, res) => {
+// --- Kaydetme Rotası (POST) ---
+app.post('/api/site-data', async (req, res) => {
   try {
     const docRef = doc(db, 'siteData', 'home');
-    // setDoc kullanarak merge:true yapıyoruz, böylece doküman yoksa oluşturulur.
     await setDoc(docRef, req.body, { merge: true });
-    
-    return res.status(200).json({ success: true, message: "Başarıyla kaydedildi!" });
+    return res.status(200).json({ message: "Başarıyla kaydedildi!" });
   } catch (error: any) {
-    console.error("Kaydetme Hatası:", error);
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ error: error.message });
   }
 });
 
-// --- DİĞER ROTALAR ---
-app.get(['/api/site-data', '/api/profile'], async (req, res) => {
+// --- Veri Getirme Rotası (GET) ---
+app.get('/api/site-data', async (req, res) => {
   try {
-    const docSnap = await getDoc(doc(db, 'siteData', 'home'));
-    return res.json(docSnap.exists() ? docSnap.data() : {});
-  } catch (err: any) { return res.status(500).json({ error: err.message }); }
+    const docRef = doc(db, 'siteData', 'home');
+    const docSnap = await getDoc(docRef);
+    return res.status(200).json(docSnap.exists() ? docSnap.data() : {});
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
 });
 
-app.post('/api/auth/login', async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const adminSnap = await getDoc(doc(db, 'settings', 'admin'));
-    if (adminSnap.exists() && email === 'admin@example.com' && password === adminSnap.data().password) {
-      return res.json({ token: 'secure-token-123', user: { email } });
-    }
-    return res.status(401).json({ message: 'Hatalı giriş' });
-  } catch (err: any) { return res.status(500).json({ error: err.message }); }
-});
-
-// Postlar için 404 hatasını önlemek adına
+// --- Diğer Gerekli Rotalar (Hata Almamak İçin) ---
 app.get('/api/posts', async (req, res) => {
   try {
     const querySnapshot = await getDocs(collection(db, "posts"));
-    const posts = querySnapshot.docs.map(doc => ({ _id: doc.id, ...doc.data() }));
+    const posts = querySnapshot.docs.map(d => ({ _id: d.id, ...d.data() }));
     return res.json(posts);
   } catch (err: any) { return res.status(500).json({ error: err.message }); }
 });
