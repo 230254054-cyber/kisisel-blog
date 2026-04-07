@@ -2,31 +2,34 @@ import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 import { Post } from '../types';
 import PostCard from '../components/PostCard';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { ArrowRight, Code, Cpu, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-interface Profile {
-  homeHeroTitle: string;
-  homeHeroSubtitle: string;
+interface SiteData {
+  heroTitle?: string;
+  heroSubtitle?: string;
+  aboutMe?: string;
 }
 
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [siteData, setSiteData] = useState<SiteData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [fetchedPosts, fetchedProfile] = await Promise.all([
+        // Hem postları hem de site verilerini çekiyoruz
+        const [fetchedPosts, fetchedData] = await Promise.all([
           api.get('/posts'),
-          api.get('/profile')
+          api.get('/site-data') // Backend'de eklediğimiz rota
         ]);
+        
         setPosts(fetchedPosts.slice(0, 3));
-        setProfile(fetchedProfile);
+        setSiteData(fetchedData);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Veri çekme hatası:', error);
       } finally {
         setLoading(false);
       }
@@ -45,16 +48,18 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               className="text-5xl font-extrabold tracking-tight text-zinc-900 dark:text-white sm:text-7xl"
             >
-              {profile?.homeHeroTitle || 'Building the Future of Web.'}
+              {siteData?.heroTitle || 'Building the Future of Web.'}
             </motion.h1>
+            
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
               className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-zinc-600 dark:text-zinc-400"
             >
-              {profile?.homeHeroSubtitle || "Hi, I'm a Computer Engineering student passionate about full-stack development, AI, and clean design."}
+              {siteData?.heroSubtitle || "Hi, I'm a Computer Engineering student passionate about full-stack development, AI, and clean design."}
             </motion.p>
+
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -67,10 +72,7 @@ export default function Home() {
               >
                 View Projects
               </Link>
-              <Link
-                to="/about"
-                className="text-sm font-semibold leading-6 text-zinc-900 dark:text-white"
-              >
+              <Link to="/about" className="text-sm font-semibold leading-6 text-zinc-900 dark:text-white">
                 Learn more <span aria-hidden="true">→</span>
               </Link>
             </motion.div>
@@ -86,27 +88,23 @@ export default function Home() {
               <Code className="h-6 w-6 text-zinc-900 dark:text-white" />
             </div>
             <h3 className="text-lg font-bold text-zinc-900 dark:text-white">Frontend</h3>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              React, TypeScript, Tailwind CSS, and modern UI/UX principles.
-            </p>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">React, TypeScript, Tailwind CSS, and modern UI/UX principles.</p>
           </div>
+
           <div className="flex flex-col items-center space-y-4 rounded-3xl border border-zinc-200 bg-white p-8 text-center dark:border-zinc-800 dark:bg-zinc-900/50">
             <div className="rounded-2xl bg-zinc-100 p-3 dark:bg-zinc-800">
               <Cpu className="h-6 w-6 text-zinc-900 dark:text-white" />
             </div>
             <h3 className="text-lg font-bold text-zinc-900 dark:text-white">Backend</h3>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              Node.js, Express, Firebase, and RESTful API design.
-            </p>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">Node.js, Express, Firebase, and RESTful API design.</p>
           </div>
+
           <div className="flex flex-col items-center space-y-4 rounded-3xl border border-zinc-200 bg-white p-8 text-center dark:border-zinc-800 dark:bg-zinc-900/50">
             <div className="rounded-2xl bg-zinc-100 p-3 dark:bg-zinc-800">
               <Globe className="h-6 w-6 text-zinc-900 dark:text-white" />
             </div>
             <h3 className="text-lg font-bold text-zinc-900 dark:text-white">DevOps</h3>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              Cloud Run, CI/CD, and serverless architecture.
-            </p>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">Cloud Run, CI/CD, and serverless architecture.</p>
           </div>
         </div>
       </section>
@@ -115,10 +113,7 @@ export default function Home() {
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">Latest Posts</h2>
-          <Link
-            to="/blog"
-            className="flex items-center space-x-1 text-sm font-semibold text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
-          >
+          <Link to="/blog" className="flex items-center space-x-1 text-sm font-semibold text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">
             <span>View all</span>
             <ArrowRight className="h-4 w-4" />
           </Link>
@@ -134,9 +129,7 @@ export default function Home() {
               <PostCard key={post._id} post={post} index={index} />
             ))
           ) : (
-            <div className="col-span-full py-12 text-center text-zinc-500">
-              No posts found.
-            </div>
+            <div className="col-span-full py-12 text-center text-zinc-500">No posts found.</div>
           )}
         </div>
       </section>
