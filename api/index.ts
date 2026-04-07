@@ -14,19 +14,15 @@ app.post('/api/auth/login', (req, res) => {
     res.status(401).json({ message: 'Hatalı giriş bilgileri' });
   }
 });
-// ... mevcut login rotasının (app.post('/api/auth/login', ...)) bittiği yerin altına ekle:
-
-app.post('/api/auth/update-password', (req, res) => {
-  const { newPassword } = req.body;
+// Şifre değiştirme rotası - Tam eşleşme için:
+app.put('/api/auth/change-password', (req, res) => {
+  const { oldPassword, newPassword } = req.body;
   
-  // Şimdilik sadece başarılı dönelim, ileride buraya DB mantığı eklersin
-  console.log("Yeni şifre talebi:", newPassword);
+  // Şimdilik test amaçlı başarılı dönelim
+  console.log("Şifre değişim isteği alındı");
   
   return res.json({ 
     message: 'Şifre başarıyla güncellendi!' 
   });
 });
-
-// export default app satırı en altta kalmaya devam etsin
-
 export default app;
