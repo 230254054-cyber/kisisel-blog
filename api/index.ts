@@ -1,9 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
 
-// 1. Firebase Ayarların (Resmindeki bilgilere göre güncelledim)
+// 1. Firebase Ayarları
 const firebaseConfig = {
   apiKey: "AIzaSyCrT6eaWuzx5pIobHhiV62D8hu5E1by3Xw",
   authDomain: "kisisel-blog-73478.firebaseapp.com",
@@ -21,19 +21,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 3. GİRİŞ ROTASI (POST)
+// 3. GİRİŞ ROTASI
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
-  
   try {
-    // Firestore'dan şifreyi oku (settings koleksiyonu, admin dokümanı)
     const adminRef = doc(db, 'settings', 'admin');
     const adminSnap = await getDoc(adminRef);
 
     if (adminSnap.exists()) {
       const dbPassword = adminSnap.data().password;
-
-      // Karşılaştır
       if (email === 'admin@example.com' && password === dbPassword) {
         return res.json({ 
           token: 'secure-token-123', 
@@ -43,54 +39,50 @@ app.post('/api/auth/login', async (req, res) => {
         return res.status(401).json({ message: 'Hatalı e-posta veya şifre!' });
       }
     } else {
-      return res.status(404).json({ message: 'Admin verisi veritabanında bulunamadı!' });
+      return res.status(404).json({ message: 'Admin verisi bulunamadı!' });
     }
-  } catch (error) {
-    console.error("Firebase Hatası:", error);
+  } catch (error: any) {
     return res.status(500).json({ message: 'Sunucu hatası: ' + error.message });
   }
 });
 
-// 4. ŞİFRE DEĞİŞTİRME ROTASI (PUT)
+// 4. ŞİFRE DEĞİŞTİRME ROTASI
 app.put('/api/auth/change-password', async (req, res) => {
   const { newPassword } = req.body;
-
   try {
     const adminRef = doc(db, 'settings', 'admin');
-    await updateDoc(adminRef, {
-      password: newPassword
-    });
-    
-    return res.json({ message: 'Şifye veritabanında güncellendi!' });
-  } catch (error) {
+    await updateDoc(adminRef, { password: newPassword });
+    return res.json({ message: 'Şifre veritabanında güncellendi!' });
+  } catch (error: any) {
     return res.status(500).json({ message: 'Şifre güncellenemedi: ' + error.message });
   }
 });
-// 1. Ayarları Getir (GET)
+
+// 5. AYARLARI GETİR (Dashboard açıldığında verileri çeker)
 app.get('/api/site-data', async (req, res) => {
   try {
     const docRef = doc(db, 'siteData', 'home');
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      res.json(docSnap.data());
+      return res.json(docSnap.data());
     } else {
-      res.status(404).json({ message: "Veri bulunamadı" });
+      return res.status(404).json({ message: "Veri bulunamadı" });
     }
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
   }
 });
 
-// 2. Ayarları Güncelle (POST)
+// 6. AYARLARI GÜNCELLE (Dashboard'da Save butonuna basınca çalışır)
 app.post('/api/site-data', async (req, res) => {
   const newData = req.body;
   try {
     const docRef = doc(db, 'siteData', 'home');
-    await updateDoc(docRef, newData);
-    res.json({ message: "Site verileri başarıyla güncellendi!" });
-  } catch (error) {
-    // Eğer doküman hiç yoksa hata verebilir, o yüzden catch içinde yönetiyoruz
-    res.status(500).json({ error: error.message });
+    // setDoc ve merge: true sayesinde doküman yoksa hata vermez, yenisini oluşturur.
+    await setDoc(docRef, newData, { merge: true });
+    return res.json({ message: "Site verileri başarıyla güncellendi!" });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
   }
 });
 
