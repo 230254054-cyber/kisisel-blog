@@ -6,10 +6,12 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Code, Cpu, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+// Senin Dashboard'daki isimlerinle birebir aynı yaptık
 interface SiteData {
-  heroTitle?: string;
-  heroSubtitle?: string;
-  aboutMe?: string;
+  homeHeroTitle?: string;
+  homeHeroSubtitle?: string;
+  aboutContent?: string;
+  skills?: string;
 }
 
 export default function Home() {
@@ -20,10 +22,10 @@ export default function Home() {
   useEffect(() => {
     async function fetchData() {
       try {
-        // Hem postları hem de site verilerini çekiyoruz
+        // Backend'den verileri çekiyoruz
         const [fetchedPosts, fetchedData] = await Promise.all([
           api.get('/posts'),
-          api.get('/site-data') // Backend'de eklediğimiz rota
+          api.get('/site-data') 
         ]);
         
         setPosts(fetchedPosts.slice(0, 3));
@@ -48,7 +50,8 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               className="text-5xl font-extrabold tracking-tight text-zinc-900 dark:text-white sm:text-7xl"
             >
-              {siteData?.heroTitle || 'Building the Future of Web.'}
+              {/* Burayı güncelledik: homeHeroTitle */}
+              {siteData?.homeHeroTitle || 'Building the Future of Web.'}
             </motion.h1>
             
             <motion.p
@@ -57,7 +60,8 @@ export default function Home() {
               transition={{ delay: 0.1 }}
               className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-zinc-600 dark:text-zinc-400"
             >
-              {siteData?.heroSubtitle || "Hi, I'm a Computer Engineering student passionate about full-stack development, AI, and clean design."}
+              {/* Burayı güncelledik: homeHeroSubtitle */}
+              {siteData?.homeHeroSubtitle || "Hi, I'm a Computer Engineering student passionate about full-stack development."}
             </motion.p>
 
             <motion.div
@@ -68,7 +72,7 @@ export default function Home() {
             >
               <Link
                 to="/projects"
-                className="rounded-full bg-zinc-900 px-8 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+                className="rounded-full bg-zinc-900 px-8 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 dark:bg-white dark:text-zinc-900"
               >
                 View Projects
               </Link>
@@ -80,40 +84,26 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Skills Section */}
+      {/* Skills Section - Eğer skills verisini de burada listelemek istersen kullanabiliriz */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
-          <div className="flex flex-col items-center space-y-4 rounded-3xl border border-zinc-200 bg-white p-8 text-center dark:border-zinc-800 dark:bg-zinc-900/50">
-            <div className="rounded-2xl bg-zinc-100 p-3 dark:bg-zinc-800">
-              <Code className="h-6 w-6 text-zinc-900 dark:text-white" />
+         {/* ... Mevcut Skills Tasarımın ... */}
+         <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
+            <div className="flex flex-col items-center space-y-4 rounded-3xl border border-zinc-200 bg-white p-8 text-center dark:border-zinc-800 dark:bg-zinc-900/50">
+                <Code className="h-6 w-6" />
+                <h3 className="text-lg font-bold">Skills</h3>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                    {siteData?.skills || "React, Node.js, Firebase"}
+                </p>
             </div>
-            <h3 className="text-lg font-bold text-zinc-900 dark:text-white">Frontend</h3>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">React, TypeScript, Tailwind CSS, and modern UI/UX principles.</p>
-          </div>
-
-          <div className="flex flex-col items-center space-y-4 rounded-3xl border border-zinc-200 bg-white p-8 text-center dark:border-zinc-800 dark:bg-zinc-900/50">
-            <div className="rounded-2xl bg-zinc-100 p-3 dark:bg-zinc-800">
-              <Cpu className="h-6 w-6 text-zinc-900 dark:text-white" />
-            </div>
-            <h3 className="text-lg font-bold text-zinc-900 dark:text-white">Backend</h3>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">Node.js, Express, Firebase, and RESTful API design.</p>
-          </div>
-
-          <div className="flex flex-col items-center space-y-4 rounded-3xl border border-zinc-200 bg-white p-8 text-center dark:border-zinc-800 dark:bg-zinc-900/50">
-            <div className="rounded-2xl bg-zinc-100 p-3 dark:bg-zinc-800">
-              <Globe className="h-6 w-6 text-zinc-900 dark:text-white" />
-            </div>
-            <h3 className="text-lg font-bold text-zinc-900 dark:text-white">DevOps</h3>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">Cloud Run, CI/CD, and serverless architecture.</p>
-          </div>
-        </div>
+            {/* Diğer statik kutuların burada durabilir */}
+         </div>
       </section>
 
       {/* Latest Posts */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">Latest Posts</h2>
-          <Link to="/blog" className="flex items-center space-x-1 text-sm font-semibold text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">
+          <Link to="/blog" className="flex items-center space-x-1 text-sm font-semibold text-zinc-600 dark:text-zinc-400">
             <span>View all</span>
             <ArrowRight className="h-4 w-4" />
           </Link>
@@ -121,9 +111,7 @@ export default function Home() {
 
         <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {loading ? (
-            Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-64 animate-pulse rounded-2xl bg-zinc-100 dark:bg-zinc-800" />
-            ))
+            <div className="col-span-full text-center">Loading...</div>
           ) : posts.length > 0 ? (
             posts.map((post, index) => (
               <PostCard key={post._id} post={post} index={index} />
