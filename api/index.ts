@@ -6,7 +6,7 @@ app.use(cors());
 app.use(express.json());
 
 // Vercel api klasöründe olduğu için rota direkt /auth/login olmalı
-app.post('/auth/login', (req, res) => {
+app.post('/api/auth/login', (req, res) => {
   const { email, password } = req.body;
   if (email === 'admin@example.com' && password === 'admin123') {
     res.json({ token: 'fake-jwt-token', user: { email: 'admin@example.com' } });
