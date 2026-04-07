@@ -19,50 +19,46 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- AUTH ---
-app.post('/api/auth/login', async (req, res) => {
-  const { email, password } = req.body;
+// --- SITE DATA KAYDETME (Unexpected Token Çözümü) ---
+app.post(['/api/site-data', '/api/profile'], async (req, res) => {
   try {
-    const adminRef = doc(db, 'settings', 'admin');
-    const adminSnap = await getDoc(adminRef);
-    if (adminSnap.exists() && email === 'admin@example.com' && password === adminSnap.data().password) {
-      return res.json({ token: 'secure-token-123', user: { email } });
-    }
-    res.status(401).json({ message: 'Hatalı giriş' });
-  } catch (err: any) { res.status(500).json({ error: err.message }); }
+    const docRef = doc(db, 'siteData', 'home');
+    // setDoc kullanarak merge:true yapıyoruz, böylece doküman yoksa oluşturulur.
+    await setDoc(docRef, req.body, { merge: true });
+    
+    return res.status(200).json({ success: true, message: "Başarıyla kaydedildi!" });
+  } catch (error: any) {
+    console.error("Kaydetme Hatası:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
 });
 
-// --- SITE DATA (HOME & PROFILE) ---
+// --- DİĞER ROTALAR ---
 app.get(['/api/site-data', '/api/profile'], async (req, res) => {
   try {
     const docSnap = await getDoc(doc(db, 'siteData', 'home'));
-    res.json(docSnap.exists() ? docSnap.data() : {});
-  } catch (err: any) { res.status(500).json({ error: err.message }); }
+    return res.json(docSnap.exists() ? docSnap.data() : {});
+  } catch (err: any) { return res.status(500).json({ error: err.message }); }
 });
 
-app.post(['/api/site-data', '/api/profile'], async (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
   try {
-    await setDoc(doc(db, 'siteData', 'home'), req.body, { merge: true });
-    res.json({ message: "Başarıyla kaydedildi!" });
-  } catch (err: any) { res.status(500).json({ error: err.message }); }
+    const adminSnap = await getDoc(doc(db, 'settings', 'admin'));
+    if (adminSnap.exists() && email === 'admin@example.com' && password === adminSnap.data().password) {
+      return res.json({ token: 'secure-token-123', user: { email } });
+    }
+    return res.status(401).json({ message: 'Hatalı giriş' });
+  } catch (err: any) { return res.status(500).json({ error: err.message }); }
 });
 
-// --- POSTS (404 HATASINI ÇÖZER) ---
+// Postlar için 404 hatasını önlemek adına
 app.get('/api/posts', async (req, res) => {
   try {
     const querySnapshot = await getDocs(collection(db, "posts"));
     const posts = querySnapshot.docs.map(doc => ({ _id: doc.id, ...doc.data() }));
-    res.json(posts);
-  } catch (err: any) { res.status(500).json({ error: err.message }); }
-});
-
-// --- PROJECTS (404 HATASINI ÇÖZER) ---
-app.get('/api/projects', async (req, res) => {
-  try {
-    const querySnapshot = await getDocs(collection(db, "projects"));
-    const projects = querySnapshot.docs.map(doc => ({ _id: doc.id, ...doc.data() }));
-    res.json(projects);
-  } catch (err: any) { res.status(500).json({ error: err.message }); }
+    return res.json(posts);
+  } catch (err: any) { return res.status(500).json({ error: err.message }); }
 });
 
 export default app;
