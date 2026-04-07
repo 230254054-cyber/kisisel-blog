@@ -1,9 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from "firebase/firestore";
 
-// 1. Firebase Ayarları
 const firebaseConfig = {
   apiKey: "AIzaSyCrT6eaWuzx5pIobHhiV62D8hu5E1by3Xw",
   authDomain: "kisisel-blog-73478.firebaseapp.com",
@@ -13,88 +12,57 @@ const firebaseConfig = {
   appId: "1:716734159365:web:dcf1dfbc1ff48605271a6c"
 };
 
-// 2. Firebase'i Başlat
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
-
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
-// 3. GİRİŞ ROTASI
+// --- AUTH ---
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   try {
     const adminRef = doc(db, 'settings', 'admin');
     const adminSnap = await getDoc(adminRef);
-
-    if (adminSnap.exists()) {
-      const dbPassword = adminSnap.data().password;
-      if (email === 'admin@example.com' && password === dbPassword) {
-        return res.json({ 
-          token: 'secure-token-123', 
-          user: { email: 'admin@example.com' } 
-        });
-      } else {
-        return res.status(401).json({ message: 'Hatalı e-posta veya şifre!' });
-      }
-    } else {
-      return res.status(404).json({ message: 'Admin verisi bulunamadı!' });
+    if (adminSnap.exists() && email === 'admin@example.com' && password === adminSnap.data().password) {
+      return res.json({ token: 'secure-token-123', user: { email } });
     }
-  } catch (error: any) {
-    return res.status(500).json({ message: 'Sunucu hatası: ' + error.message });
-  }
+    res.status(401).json({ message: 'Hatalı giriş' });
+  } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
-// 4. ŞİFRE DEĞİŞTİRME ROTASI
-app.put('/api/auth/change-password', async (req, res) => {
-  const { newPassword } = req.body;
-  try {
-    const adminRef = doc(db, 'settings', 'admin');
-    await updateDoc(adminRef, { password: newPassword });
-    return res.json({ message: 'Şifre veritabanında güncellendi!' });
-  } catch (error: any) {
-    return res.status(500).json({ message: 'Şifre güncellenemedi: ' + error.message });
-  }
-});
-
-// 5. AYARLARI GETİR (Dashboard açıldığında verileri çeker)
-// HEM SITE-DATA HEM DE PROFILE ISMINI DESTEKLIYORUZ (404 Hatasını Çözer)
+// --- SITE DATA (HOME & PROFILE) ---
 app.get(['/api/site-data', '/api/profile'], async (req, res) => {
   try {
-    const docRef = doc(db, 'siteData', 'home');
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      return res.json(docSnap.data());
-    } else {
-      // Eğer veritabanı boşsa hata vermesin, boş bir obje dönsün
-      return res.json({});
-    }
-  } catch (error: any) {
-    return res.status(500).json({ error: error.message });
-  }
+    const docSnap = await getDoc(doc(db, 'siteData', 'home'));
+    res.json(docSnap.exists() ? docSnap.data() : {});
+  } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
 app.post(['/api/site-data', '/api/profile'], async (req, res) => {
-  const newData = req.body;
   try {
-    const docRef = doc(db, 'siteData', 'home');
-    await setDoc(docRef, newData, { merge: true });
-    return res.json({ message: "Başarıyla güncellendi!" });
-  } catch (error: any) {
-    return res.status(500).json({ error: error.message });
-  }
+    await setDoc(doc(db, 'siteData', 'home'), req.body, { merge: true });
+    res.json({ message: "Başarıyla kaydedildi!" });
+  } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
-// Resimdeki PUT hatası için bunu da ekleyelim
-app.put('/api/profile', async (req, res) => {
-  const newData = req.body;
+// --- POSTS (404 HATASINI ÇÖZER) ---
+app.get('/api/posts', async (req, res) => {
   try {
-    const docRef = doc(db, 'siteData', 'home');
-    await setDoc(docRef, newData, { merge: true });
-    return res.json({ message: "Profil güncellendi!" });
-  } catch (error: any) {
-    return res.status(500).json({ error: error.message });
-  }
+    const querySnapshot = await getDocs(collection(db, "posts"));
+    const posts = querySnapshot.docs.map(doc => ({ _id: doc.id, ...doc.data() }));
+    res.json(posts);
+  } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
+
+// --- PROJECTS (404 HATASINI ÇÖZER) ---
+app.get('/api/projects', async (req, res) => {
+  try {
+    const querySnapshot = await getDocs(collection(db, "projects"));
+    const projects = querySnapshot.docs.map(doc => ({ _id: doc.id, ...doc.data() }));
+    res.json(projects);
+  } catch (err: any) { res.status(500).json({ error: err.message }); }
+});
+
 export default app;
