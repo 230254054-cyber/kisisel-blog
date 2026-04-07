@@ -59,31 +59,42 @@ app.put('/api/auth/change-password', async (req, res) => {
 });
 
 // 5. AYARLARI GETİR (Dashboard açıldığında verileri çeker)
-app.get('/api/site-data', async (req, res) => {
+// HEM SITE-DATA HEM DE PROFILE ISMINI DESTEKLIYORUZ (404 Hatasını Çözer)
+app.get(['/api/site-data', '/api/profile'], async (req, res) => {
   try {
     const docRef = doc(db, 'siteData', 'home');
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       return res.json(docSnap.data());
     } else {
-      return res.status(404).json({ message: "Veri bulunamadı" });
+      // Eğer veritabanı boşsa hata vermesin, boş bir obje dönsün
+      return res.json({});
     }
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }
 });
 
-// 6. AYARLARI GÜNCELLE (Dashboard'da Save butonuna basınca çalışır)
-app.post('/api/site-data', async (req, res) => {
+app.post(['/api/site-data', '/api/profile'], async (req, res) => {
   const newData = req.body;
   try {
     const docRef = doc(db, 'siteData', 'home');
-    // setDoc ve merge: true sayesinde doküman yoksa hata vermez, yenisini oluşturur.
     await setDoc(docRef, newData, { merge: true });
-    return res.json({ message: "Site verileri başarıyla güncellendi!" });
+    return res.json({ message: "Başarıyla güncellendi!" });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }
 });
 
+// Resimdeki PUT hatası için bunu da ekleyelim
+app.put('/api/profile', async (req, res) => {
+  const newData = req.body;
+  try {
+    const docRef = doc(db, 'siteData', 'home');
+    await setDoc(docRef, newData, { merge: true });
+    return res.json({ message: "Profil güncellendi!" });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+});
 export default app;
