@@ -15,14 +15,24 @@ app.post('/api/auth/login', (req, res) => {
   }
 });
 // Şifre değiştirme rotası - Tam eşleşme için:
-app.put('/api/auth/change-password', (req, res) => {
-  const { oldPassword, newPassword } = req.body;
-  
-  // Şimdilik test amaçlı başarılı dönelim
-  console.log("Şifre değişim isteği alındı");
-  
-  return res.json({ 
-    message: 'Şifre başarıyla güncellendi!' 
-  });
+app.put('/api/auth/change-password', async (req, res) => {
+  const { newPassword } = req.body;
+
+  if (!newPassword) {
+    return res.status(400).json({ message: 'Yeni şifre gönderilmedi' });
+  }
+
+  try {
+    const adminRef = doc(db, 'settings', 'admin');
+    await updateDoc(adminRef, {
+      password: newPassword
+    });
+    
+    console.log("Şifre Firestore'da güncellendi!");
+    return res.json({ message: 'Şifre başarıyla güncellendi!' });
+  } catch (error) {
+    console.error("Firestore Güncelleme Hatası:", error);
+    return res.status(500).json({ message: 'Veritabanına yazılamadı!', error: error.message });
+  }
 });
 export default app;
