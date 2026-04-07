@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import { db } from '@/src/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 const app = express();
 app.use(cors());
