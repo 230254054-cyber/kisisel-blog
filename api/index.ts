@@ -42,5 +42,24 @@ app.get('/api/posts', async (req, res) => {
   const snap = await getDocs(collection(db, "posts"));
   res.json(snap.docs.map(d => ({ _id: d.id, ...d.data() })));
 });
+// api/index.ts içine mevcut olanların altına şunları ekle:
+
+// BLOG YAZISI EKLEME (POST)
+app.post('/api/posts', async (req, res) => {
+  try {
+    const docRef = doc(collection(db, "posts")); // Otomatik ID oluşturur
+    await setDoc(docRef, req.body);
+    res.json({ message: "Post eklendi!" });
+  } catch (err: any) { res.status(500).json({ error: err.message }); }
+});
+
+// PROJE EKLEME (POST)
+app.post('/api/projects', async (req, res) => {
+  try {
+    const docRef = doc(collection(db, "projects")); // Otomatik ID oluşturur
+    await setDoc(docRef, req.body);
+    res.json({ message: "Proje eklendi!" });
+  } catch (err: any) { res.status(500).json({ error: err.message }); }
+});
 
 export default app;
