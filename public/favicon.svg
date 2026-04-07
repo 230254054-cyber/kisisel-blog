@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" fill="transparent" />
+  <!-- 3D Shadow -->
+  <path d="M8 6 h16 v4 h-12 v4 h10 v4 h-10 v4 h12 v4 h-16 z" fill="black" transform="translate(2, 2)" />
+  <!-- Main E -->
+  <path d="M8 6 h16 v4 h-12 v4 h10 v4 h-10 v4 h12 v4 h-16 z" fill="white" stroke="black" stroke-width="1" />
+</svg>

@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+  body {
+    @apply bg-white text-zinc-900 antialiased transition-colors duration-300 dark:bg-zinc-950 dark:text-zinc-50;
+  }
+}
+
+/* Markdown Styles */
+.prose {
+  @apply max-w-none leading-relaxed;
+}
+.prose h1, .prose h2, .prose h3 {
+  @apply font-bold tracking-tight text-zinc-900 dark:text-white;
+}
+.prose p {
+  @apply mt-4 text-zinc-600 dark:text-zinc-400;
+}
+.prose ul {
+  @apply mt-4 list-disc pl-5 text-zinc-600 dark:text-zinc-400;
+}
+.prose code {
+  @apply rounded bg-zinc-100 px-1 py-0.5 font-mono text-sm dark:bg-zinc-800;
+}
+
