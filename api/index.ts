@@ -19,35 +19,28 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- Kaydetme Rotası (POST) ---
-app.post('/api/site-data', async (req, res) => {
+// HEM GET HEM POST İÇİN TÜM YOLLARI TANIMLIYORUZ (404 HATASINI BİTİRİR)
+const siteDataRoutes = ['/api/site-data', '/api/profile'];
+
+app.get(siteDataRoutes, async (req, res) => {
   try {
-    const docRef = doc(db, 'siteData', 'home');
-    await setDoc(docRef, req.body, { merge: true });
-    return res.status(200).json({ message: "Başarıyla kaydedildi!" });
-  } catch (error: any) {
-    return res.status(500).json({ error: error.message });
-  }
+    const docSnap = await getDoc(doc(db, 'siteData', 'home'));
+    res.json(docSnap.exists() ? docSnap.data() : {});
+  } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
-// --- Veri Getirme Rotası (GET) ---
-app.get('/api/site-data', async (req, res) => {
+app.post(siteDataRoutes, async (req, res) => {
   try {
-    const docRef = doc(db, 'siteData', 'home');
-    const docSnap = await getDoc(docRef);
-    return res.status(200).json(docSnap.exists() ? docSnap.data() : {});
-  } catch (error: any) {
-    return res.status(500).json({ error: error.message });
-  }
+    // updateDoc yerine setDoc + merge kullanmak döküman yoksa hata almanı engeller
+    await setDoc(doc(db, 'siteData', 'home'), req.body, { merge: true });
+    res.json({ message: "Başarıyla kaydedildi!" });
+  } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
-// --- Diğer Gerekli Rotalar (Hata Almamak İçin) ---
+// Postlar ve Projeler için boş dönmesin (404 önleyici)
 app.get('/api/posts', async (req, res) => {
-  try {
-    const querySnapshot = await getDocs(collection(db, "posts"));
-    const posts = querySnapshot.docs.map(d => ({ _id: d.id, ...d.data() }));
-    return res.json(posts);
-  } catch (err: any) { return res.status(500).json({ error: err.message }); }
+  const snap = await getDocs(collection(db, "posts"));
+  res.json(snap.docs.map(d => ({ _id: d.id, ...d.data() })));
 });
 
 export default app;
