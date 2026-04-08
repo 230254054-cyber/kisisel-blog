@@ -1,93 +1,55 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
-import { Mail, Github, Linkedin } from 'lucide-react';
-import { api } from '../lib/api';
-
-interface Profile {
-  aboutContent: string;
-  skills: string[];
-  githubUrl?: string;
-  linkedinUrl?: string;
-}
+import { motion } from 'framer-motion';
 
 export default function About() {
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [siteData, setSiteData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchProfile() {
-      try {
-        const data = await api.get('/profile');
-        setProfile(data);
-      } catch (error) {
-        console.error('Error fetching profile:', error);
-      } finally {
+    fetch('/api/site-data')
+      .then(res => res.json())
+      .then(data => {
+        setSiteData(data);
         setLoading(false);
-      }
-    }
-    fetchProfile();
+      })
+      .catch(() => setLoading(false));
   }, []);
 
-  if (loading) return null;
+  if (loading) return <div className="text-center py-20">Yükleniyor...</div>;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-24 sm:px-6 lg:px-8">
-      <motion.div
+    <div className="max-w-3xl mx-auto px-4 py-24">
+      <motion.h1 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="space-y-12"
+        className="text-4xl font-bold mb-8 text-zinc-900 dark:text-white"
       >
-        <header className="space-y-4">
-          <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-white sm:text-5xl">
-            About Me
-          </h1>
-        </header>
+        Hakkımda
+      </motion.h1>
+      
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="prose prose-zinc dark:prose-invert lg:prose-xl"
+      >
+        {/* Dashboard'daki About Content buraya geliyor */}
+        <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed whitespace-pre-wrap">
+          {siteData?.aboutContent || "Henüz bir içerik girilmemiş."}
+        </p>
 
-        <div className="prose prose-zinc dark:prose-invert max-w-none text-lg text-zinc-600 dark:text-zinc-400">
-          <p>
-            {profile?.aboutContent || 'I am a computer engineering student focused on full-stack development.'}
-          </p>
-
-          <h3 className="text-zinc-900 dark:text-white">Technical Skills</h3>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            {(profile?.skills || []).map((skill) => (
-              <div
-                key={skill}
-                className="flex items-center space-x-2 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50"
-              >
-                <div className="h-2 w-2 rounded-full bg-zinc-900 dark:bg-white" />
-                <span className="text-sm font-medium text-zinc-900 dark:text-white">{skill}</span>
-              </div>
-            ))}
+        {siteData?.skills && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold mb-4">Yetenekler</h2>
+            <div className="flex flex-wrap gap-2">
+              {siteData.skills.split(',').map((skill: string) => (
+                <span key={skill} className="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-full text-sm font-medium">
+                  {skill.trim()}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
-
-        <div className="pt-8 border-t border-zinc-200 dark:border-zinc-800 space-y-6">
-          <p className="text-zinc-500 dark:text-zinc-400">
-            Contact: <a href="mailto:mehmeteminaydogdu498@gmail.com" className="text-zinc-900 dark:text-white hover:underline">mehmeteminaydogdu498@gmail.com</a>
-          </p>
-          
-          <div className="flex flex-wrap gap-4">
-            <a
-              href={profile?.githubUrl || 'https://github.com'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center space-x-2 rounded-full bg-zinc-100 px-6 py-3 text-sm font-medium text-zinc-900 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700"
-            >
-              <Github className="h-4 w-4" />
-              <span>GitHub</span>
-            </a>
-            <a
-              href={profile?.linkedinUrl || 'https://linkedin.com'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center space-x-2 rounded-full bg-zinc-100 px-6 py-3 text-sm font-medium text-zinc-900 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700"
-            >
-              <Linkedin className="h-4 w-4" />
-              <span>LinkedIn</span>
-            </a>
-          </div>
-        </div>
+        )}
       </motion.div>
     </div>
   );
